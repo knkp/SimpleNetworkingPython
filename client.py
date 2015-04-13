@@ -1,5 +1,5 @@
 import socket
-import sys
+
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -15,6 +15,8 @@ try:
         sock.sendall(message)
         amount_received = 0
         amount_expected = len(message)
+
+## need to fix encoding issue, needs to be converted to bytes from int before sent -SC 4/13/2015
 
         while amount_received < amount_expected:
                 data = sock.recv(16)
