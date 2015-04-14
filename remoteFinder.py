@@ -3,12 +3,15 @@ import socket
 
 class RemoteFinder:
 
+    #locally assigned name
+
+    friendlyName = ''
 
     #server metadata
     sizeOfMessage = 1
     msgSendingLocalAddress = b's'
     msgRequestRemoteAddress = b'r'
-    ack = 'ack'
+    ack = ''
 
     server_address_ip = ''
     server_port = ''
@@ -18,7 +21,8 @@ class RemoteFinder:
     local_address = ''
 
 
-    def __init__(self, awsServerIP, awsServerPort):
+    def __init__(self, friendlyName, awsServerIP, awsServerPort):
+        self.friendlyName = friendlyName
         self.server_address_ip = awsServerIP
         self.server_port = awsServerPort
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,19 +31,36 @@ class RemoteFinder:
         print('connecting to ip address ' + self.server_address_ip + ' port ', self.server_port)
 
 
-## for this to work correctly, it needs to be able to negotiate with the server on AWS, first, that it is about to transfer
-## it's ip address, it then needs to send it the length of the ip address and then the actual ip, strings, ints, etc cannot
-## be transferred directly but must be changed into bytes and sent a couple at a time and then reconstructed on the otherside
-## This really needs to be finished before anything useful can be done with it - SC 4/13/2015
+## can now negotiate connection, now need to add friendly name to tranmission as well so that local machine can be resolved
 
-    def uploadAddressToAWS(self):
+    def uploadLocalAddressToAWS(self):
+        lengthlist = []
         self.sock.connect(self.server_address)
         length = len(self.local_address)
+        lengthlist.append(length)
+        length_bytes = bytes(lengthlist)
+        #let aws server know we are sending the local address
         self.sock.sendall(self.msgSendingLocalAddress)
         self.ack = self.sock.recv(3)
         if self.ack == 'ack':
-
-            self.sock.sendall(self.local_address)
+            self.ack = ''
+            # send the length of the address to the server
+            self.sock.sendall(length_bytes)
+            self.ack = self.sock.recv(3)
+            if self.ack == 'ack':
+                self.ack = ''
+                #send the local address
+                self.sock.sendall(self.local_address)
+                self.ack = self.sock.recv(3)
+                if self.ack == 'ack':
+                    #yay it worked, moving on
+                    print('succesfully updated master server')
+                else:
+                    print('failed to get ack while uploading local address')
+            else:
+                print('failed to get ack while uploading local address length')
+        else:
+            print('failed to get ack while sending sending-local-address request')
 
         self.sock.close()
 
@@ -51,3 +72,5 @@ class RemoteFinder:
         self.sock.connect(self.server_address)
 
     def closeRemoteAddress(self):
+        print('closing remote address port')
+        self.sock.close()
