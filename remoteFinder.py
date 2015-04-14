@@ -28,6 +28,7 @@ class RemoteFinder:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.local_address = socket.gethostbyname(socket.gethostname())
         self.server_address = (self.server_address_ip, self.server_port)
+        self.local_address = self.local_address.encode('latin-1') #convert to byte string
         print('connecting to ip address ' + self.server_address_ip + ' port ', self.server_port)
 
 
@@ -42,17 +43,17 @@ class RemoteFinder:
         #let aws server know we are sending the local address
         self.sock.sendall(self.msgSendingLocalAddress)
         self.ack = self.sock.recv(3)
-        if self.ack == 'ack':
+        if self.ack == b'ack':
             self.ack = ''
             # send the length of the address to the server
             self.sock.sendall(length_bytes)
             self.ack = self.sock.recv(3)
-            if self.ack == 'ack':
+            if self.ack == b'ack':
                 self.ack = ''
                 #send the local address
                 self.sock.sendall(self.local_address)
                 self.ack = self.sock.recv(3)
-                if self.ack == 'ack':
+                if self.ack == b'ack':
                     #yay it worked, moving on
                     print('succesfully updated master server')
                 else:

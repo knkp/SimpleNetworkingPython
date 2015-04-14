@@ -13,12 +13,18 @@ sock.connect(server_address)
 try:
         lenlist = []
         length = len(socket.gethostbyname(socket.gethostname()))
+        message = socket.gethostbyname(socket.gethostname())
+        print(message)
         #message = b'This is a message... for a faggot'
+        messageBytes = bytes(message)
+        lengthOfMessageBytes = len(messageBytes)
+        print(messageBytes)
         print(length)
         lenlist.append(length)
         length = bytes(lenlist)
         print(length)
         sock.sendall(length)
+
        # amount_received = 0
        # amount_expected = len(message)
 
